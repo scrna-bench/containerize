@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE="scrna-bench/pixi-test:latest"
 
 # Build
-"${SCRIPT_DIR}/../../build-pixi.sh" --lock "${SCRIPT_DIR}/pixi.lock" --tag "$IMAGE"
+"${SCRIPT_DIR}/../build.sh" --lock "${SCRIPT_DIR}/pixi.lock" --tag "$IMAGE"
 
 echo ""
 echo "Verifying packages import in container..."

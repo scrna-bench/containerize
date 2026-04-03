@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# build-pixi.sh
-# Build a Docker image from a pixi.lock file using Dockerfile.pixi.
+# build.sh
+# Build a Docker image from a pixi.lock file.
 #
 # Usage:
-#   ./build-pixi.sh --lock <path/to/pixi.lock> --tag <registry/image:tag> [options]
+#   ./build.sh --lock <path/to/pixi.lock> --tag <registry/image:tag> [options]
 #
 # Options:
 #   --lock          Path to pixi.lock (required)
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOCKERFILE="${SCRIPT_DIR}/Dockerfile.pixi"
+DOCKERFILE="${SCRIPT_DIR}/Dockerfile"
 
 # ── Args ───────────────────────────────────────────────────────────────────────
 LOCK_FILE=""

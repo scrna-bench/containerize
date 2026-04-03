@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# build-rv.sh
-# Build a Docker image from an rv.lock file using Dockerfile.rv.
+# build.sh
+# Build a Docker image from an rv.lock file.
 #
 # Usage:
-#   ./build-rv.sh --lock <path/to/rv.lock> --tag <registry/image:tag> [options]
+#   ./build.sh --lock <path/to/rv.lock> --tag <registry/image:tag> [options]
 #
 # Options:
 #   --lock        Path to rv.lock (required)
 #   --tag         Image tag to build (required)
-#   --rv-version  rv version to use, e.g. "v0.20.0" (default: version in Dockerfile)
+#   --rv-version  rv version to use, e.g. "0.20.0" (default: latest)
 #   --            Remaining args are forwarded to docker build
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOCKERFILE="${SCRIPT_DIR}/Dockerfile.rv"
+DOCKERFILE="${SCRIPT_DIR}/Dockerfile"
 
 # ── Args ───────────────────────────────────────────────────────────────────────
 LOCK_FILE=""
@@ -59,7 +59,7 @@ cp "$RPROJECT" "${BUILD_CTX}/rproject.toml"
 
 # ── Docker build ───────────────────────────────────────────────────────────────
 EXTRA_ARGS=()
-[[ -n "$RV_VERSION" ]] && EXTRA_ARGS+=(--build-arg "RV_VERSION=${RV_VERSION}")
+[[ -n "$RV_VERSION" ]] && EXTRA_ARGS+=(--build-arg "RV_VERSION=v${RV_VERSION}")
 
 docker build \
   --build-arg R_VERSION="${R_VERSION}" \

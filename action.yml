@@ -1,0 +1,70 @@
+name: Build container from lock file
+description: >
+  Detects rv.lock or pixi.lock in a directory and builds a Docker image from it.
+  Does not push — callers handle registry auth and push separately.
+
+inputs:
+  lock-file-dir:
+    description: Directory containing the lock file and companion config
+    required: false
+    default: .
+  lock-type:
+    description: "'rv' or 'pixi' — required only if both lock files are present"
+    required: false
+    default: ""
+  image-name:
+    description: "Image name, e.g. ghcr.io/myorg/my-image"
+    required: true
+  image-tag:
+    description: Image tag
+    required: false
+    default: latest
+  rv-version:
+    description: "rv version to pin, e.g. 0.20.0 (omit for latest)"
+    required: false
+    default: ""
+  pixi-version:
+    description: "pixi image version to pin, e.g. 0.41.4 (omit for latest)"
+    required: false
+    default: latest
+
+outputs:
+  image:
+    description: Full image ref that was built, e.g. ghcr.io/myorg/my-image:latest
+    value: ${{ steps.set-output.outputs.image }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect lock file
+      id: detect
+      shell: bash
+      run: |
+        bash "${{ github.action_path }}/detect-lockfile.sh" \
+          "${{ inputs.lock-file-dir }}" \
+          "${{ inputs.lock-type }}"
+
+    - name: Build (rv)
+      if: steps.detect.outputs.lock-type == 'rv'
+      shell: bash
+      run: |
+        EXTRA_ARGS=()
+        [[ -n "${{ inputs.rv-version }}" ]] && EXTRA_ARGS+=(--rv-version "${{ inputs.rv-version }}")
+        bash "${{ github.action_path }}/rv/build.sh" \
+          --lock "${{ steps.detect.outputs.lock-file }}" \
+          --tag  "${{ inputs.image-name }}:${{ inputs.image-tag }}" \
+          "${EXTRA_ARGS[@]}"
+
+    - name: Build (pixi)
+      if: steps.detect.outputs.lock-type == 'pixi'
+      shell: bash
+      run: |
+        bash "${{ github.action_path }}/pixi/build.sh" \
+          --lock         "${{ steps.detect.outputs.lock-file }}" \
+          --tag          "${{ inputs.image-name }}:${{ inputs.image-tag }}" \
+          --pixi-version "${{ inputs.pixi-version }}"
+
+    - name: Set output
+      id: set-output
+      shell: bash
+      run: echo "image=${{ inputs.image-name }}:${{ inputs.image-tag }}" >> "$GITHUB_OUTPUT"

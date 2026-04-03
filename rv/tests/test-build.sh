@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE="scrna-bench/rv-test:latest"
 
 # Build
-"${SCRIPT_DIR}/../../build-rv.sh" --lock "${SCRIPT_DIR}/rv.lock" --tag "$IMAGE"
+"${SCRIPT_DIR}/../build.sh" --lock "${SCRIPT_DIR}/rv.lock" --tag "$IMAGE"
 
 # Extract package names from the lock file and try to load each one in R
 PACKAGES="$(grep '^name = ' "${SCRIPT_DIR}/rv.lock" | sed 's/name = "\(.*\)"/\1/')"
