@@ -1,6 +1,67 @@
-# containerization
+# containerize
 
-Tooling to build reproducible R/Python environments from package lock files into Docker images.
+A GitHub Action that builds reproducible R/Python Docker images from package lock files.
+Supports [`rv`](https://github.com/A2-ai/rv) (`rv.lock`) and [`pixi`](https://pixi.sh) (`pixi.lock`) — the lock file type is detected automatically.
+
+## Usage
+
+```yaml
+- uses: scrna-bench/containerize@main
+  with:
+    image-name: ghcr.io/scrna-bench/my-image
+```
+
+### Inputs
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `image-name` | yes | | Full image name, e.g. `ghcr.io/org/image` |
+| `lock-file-dir` | no | `.` | Directory containing the lock file |
+| `lock-type` | no | auto | `rv` or `pixi` — required only if both lock files exist |
+| `image-tag` | no | `latest` | Image tag |
+| `rv-version` | no | latest | Pin rv version, e.g. `0.20.0` |
+| `pixi-version` | no | latest | Pin pixi version, e.g. `0.41.4` |
+
+### Outputs
+
+| Output | Description |
+|---|---|
+| `image` | Full image ref that was built, e.g. `ghcr.io/org/image:latest` |
+
+### Example: build and push on lock file change
+
+```yaml
+on:
+  push:
+    branches: [main]
+    paths:
+      - rv.lock
+      - rproject.toml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: scrna-bench/containerize@main
+        id: build
+        with:
+          image-name: ghcr.io/scrna-bench/pipelines-analysis
+          image-tag: ${{ github.ref_name }}
+
+      - run: docker push ${{ steps.build.outputs.image }}
+```
+
+---
 
 ## Backends
 
@@ -10,12 +71,7 @@ Tooling to build reproducible R/Python environments from package lock files into
 | Builder base | `rocker/r-ver` | `ghcr.io/prefix-dev/pixi` |
 | Runtime base | `rocker/r-ver` | `debian:bookworm-slim` |
 
-## Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)
-- `rv` or `pixi` to manage lock files
-
-## Usage
+## Running locally
 
 ### rv
 
@@ -45,81 +101,7 @@ Tooling to build reproducible R/Python environments from package lock files into
 | `--tag` | yes | |
 | `--pixi-version` | no | latest |
 
-### Extra docker build flags
-
-Use `--` to forward additional arguments to `docker build`:
-
-```sh
-./rv/build.sh --lock pipelines-analysis/rv.lock --tag scrna-bench/analysis:latest -- --no-cache
-```
-
-## GitHub Actions
-
-This directory is a composite GitHub Action. Use it in any workflow to build a container image from a lock file. The action detects the lock file type automatically.
-
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: scrna-bench/containerize@main
-        with:
-          image-name: ghcr.io/your-org/my-image
-          image-tag: ${{ github.ref_name }}   # e.g. a git tag like v1.2.3
-
-      - run: docker push ghcr.io/your-org/my-image:${{ github.ref_name }}
-```
-
-### Inputs
-
-| Input | Required | Default | Description |
-|---|---|---|---|
-| `image-name` | yes | | Full image name, e.g. `ghcr.io/org/image` |
-| `lock-file-dir` | no | `.` | Directory containing the lock file |
-| `lock-type` | no | auto | `rv` or `pixi` — required only if both lock files exist |
-| `image-tag` | no | `latest` | Image tag |
-| `rv-version` | no | latest | Pin rv version, e.g. `0.20.0` |
-| `pixi-version` | no | latest | Pin pixi version, e.g. `0.41.4` |
-
-### Outputs
-
-| Output | Description |
-|---|---|
-| `image` | Full image ref that was built, e.g. `ghcr.io/org/image:v1.2.3` |
-
-### Example: build and push on git tag
-
-```yaml
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: scrna-bench/containerize@main
-        id: build
-        with:
-          lock-file-dir: pipelines-analysis
-          image-name: ghcr.io/scrna-bench/pipelines-analysis
-          image-tag: ${{ github.ref_name }}
-
-      - run: docker push ${{ steps.build.outputs.image }}
-```
+Use `--` to forward extra arguments to `docker build`, e.g. `-- --no-cache`.
 
 ## Testing
 
