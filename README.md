@@ -1,7 +1,7 @@
 # containerize
 
 A GitHub Action that builds reproducible R/Python Docker images from package lock files.
-Supports [`rv`](https://github.com/A2-ai/rv) (`rv.lock`) and [`pixi`](https://pixi.sh) (`pixi.lock`) — the lock file type is detected automatically.
+Supports [`rv`](https://a2-ai.github.io/rv-docs/) (`rv.lock`) and [`pixi`](https://pixi.sh) (`pixi.lock`) — the lock file type is detected automatically.
 
 ## Usage
 
